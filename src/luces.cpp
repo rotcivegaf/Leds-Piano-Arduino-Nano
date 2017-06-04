@@ -14,7 +14,7 @@
 #define WHITE     8355711
 
 Adafruit_NeoPixel Strip = Adafruit_NeoPixel(300, 6, NEO_GRB + NEO_KHZ800);
-uint16_t Wait = 20;
+uint16_t Wait = 1;
 uint8_t Mode = 0;
 uint8_t Old8 = 0;
 uint8_t Old7 = 0;
@@ -30,8 +30,11 @@ void assignPin(){
 bool readChange(){
   bool ret = false;
   if(digitalRead(7)){
-    if(Mode < ModeMax && !Old7){
-      Mode++;
+    if(!Old7){
+      if(Mode < ModeMax)
+        Mode++;
+      else
+        Mode = 0;
       Old7 = 1;
       ret = true;
     }
@@ -39,8 +42,11 @@ bool readChange(){
     Old7 = 0;
   }
   if(digitalRead(8)){
-    if(Mode > 0 && !Old8){
-      Mode--;
+    if(!Old8){
+      if(Mode > 0)
+        Mode--;
+      else
+        Mode = ModeMax;
       Old8 = 1;
       ret = true;
     }
@@ -69,6 +75,18 @@ bool listen(){
   return readChange();
 }
 
+
+bool waitListen(){
+  bool ret;
+  for(uint16_t i=0; i <= Wait; i++) {
+    ret = readChange();
+    delay(1);
+    readDelay();
+    if(ret) return ret;
+  }
+  return ret;
+}
+
 //STRIP
 void apagar(){
   for(uint16_t i=0; i<Strip.numPixels(); i++)
@@ -77,14 +95,14 @@ void apagar(){
 }
 
 bool colorWipe(uint32_t c) {
+  Wait = 10;
   for(uint16_t j=Strip.numPixels()-1, i=0; j>i; i++, j--) {
-    if(listen())
+    if(waitListen())
       return true;
 
     Strip.setPixelColor(j, c);
     Strip.setPixelColor(i, c);
     Strip.show();
-    delay(Wait);
   }
 
   return false;
@@ -107,19 +125,19 @@ uint32_t getColor(uint8_t x){
 }
 
 bool colorWipeComb() {
+  Wait = 5;
   uint32_t c1 = 0, c2 = 0;
   while(c1==c2) {
     c1 = getColor(random(0,6));
     c2 = getColor(random(0,6));
   }
   for(uint16_t j=Strip.numPixels()-1, i=0; i < Strip.numPixels(); i++, j--) {
-    if(listen())
+    if(waitListen())
       return true;
 
     Strip.setPixelColor(j, c1);
     Strip.setPixelColor(i, c2);
     Strip.show();
-    delay(Wait);
   }
 
   return false;
@@ -156,16 +174,15 @@ void allChange(){
 
 //Theatre-style crawling lights.
 void theaterChase(uint32_t c) {
+  Wait = 100;
   while(!listen()){
     for (int8_t q=0; q < 3; q++) {
       for (uint16_t i=0; i < Strip.numPixels(); i=i+3) {
         Strip.setPixelColor(i+q, c);    //turn every third pixel on
       }
-      if(listen())
-        return;
       Strip.show();
-
-      delay(Wait);
+      if(waitListen())
+        return;
 
       for (uint16_t i=0; i < Strip.numPixels(); i=i+3) {
         Strip.setPixelColor(i+q, 0);        //turn every third pixel off
@@ -174,14 +191,15 @@ void theaterChase(uint32_t c) {
   }
 }
 
+
 void randomLeds() {
+  Wait = 100;
   while(!listen()){
-    if(listen())
+    if(waitListen())
       return;
     Strip.setPixelColor(random(0, Strip.numPixels()), 0);
     Strip.setPixelColor(random(0, Strip.numPixels()), random(0, 16777215));
     Strip.show();
-    delay(Wait*3);
   }
 }
 
@@ -201,51 +219,49 @@ uint32_t Wheel(byte WheelPos) {
 }
 
 void rainbow() {
+  Wait = 100;
   uint16_t i, j;
   while(!listen()){
     for(j=0; j<256; j++) {
       for(i=0; i<Strip.numPixels(); i++) {
         Strip.setPixelColor(i, Wheel((i+j) & 255));
       }
-      if(listen())
+      if(waitListen())
         return;
       Strip.show();
-      delay(Wait);
     }
   }
 }
 
 // Slightly different, this makes the rainbow equally distributed throughout
 void rainbowCycle() {
+  Wait = 100;
   uint16_t i, j;
   while(!listen()){
     for(j=0; j<256*5; j++) { // 5 cycles of all colors on wheel
       for(i=0; i< Strip.numPixels(); i++) {
         Strip.setPixelColor(i, Wheel(((i * 256 / Strip.numPixels()) + j) & 255));
       }
-      if(listen())
+      if(waitListen())
         return;
       Strip.show();
-      delay(Wait);
     }
   }
 }
 
 //Theatre-style crawling lights with rainbow effect
 void theaterChaseRainbow() {
+  Wait = 100;
   while(!listen()){
     for (int8_t j=0; j < 256; j++) {     // cycle all 256 colors in the wheel
-      for (int8_t q=0; q < 3; q++) {
-        for (uint16_t i=0; i < Strip.numPixels(); i=i+3) {
+      for (int8_t q=0; q < 2; q++) {
+        for (uint16_t i=0; i < Strip.numPixels(); i=i+2) {
           Strip.setPixelColor(i+q, Wheel( (i+j) % 255));    //turn every third pixel on
         }
-        if(listen())
+        if(waitListen())
           return;
         Strip.show();
-
-        delay(Wait);
-
-        for (uint16_t i=0; i < Strip.numPixels(); i=i+3) {
+        for (uint16_t i=0; i < Strip.numPixels(); i=i+2) {
           Strip.setPixelColor(i+q, 0);        //turn every third pixel off
         }
       }
@@ -270,12 +286,12 @@ void loop() {
     case 1:
       randomLeds();
       break;
-      case 2:
-        while(1){
-          if(colorWipe(RED) || colorWipe(GREEN) || colorWipe(BLUE) || colorWipe(WHITE))
-            break;
-        }
-        break;
+    case 2:
+      while(1){
+        if(colorWipe(RED) || colorWipe(GREEN) || colorWipe(BLUE) || colorWipe(WHITE))
+          break;
+      }
+      break;
     case 3:
       while(1){
         if(colorWipeComb())
