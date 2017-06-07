@@ -15,10 +15,11 @@
 
 Adafruit_NeoPixel Strip = Adafruit_NeoPixel(300, 6, NEO_GRB + NEO_KHZ800);
 uint16_t Wait = 1;
-uint8_t Mode = 0;
+uint32_t Tiempo;
+bool ChangeMode = 0;
 uint8_t Old8 = 0;
 uint8_t Old7 = 0;
-uint8_t ModeMax = 10;
+bool Cambio = 0;
 
 //LISTENER
 void assignPin(){
@@ -28,32 +29,28 @@ void assignPin(){
 }
 
 bool readChange(){
+  if(digitalRead(8)){
+    if(!Old8){
+      Old8 = 1;
+      if(ChangeMode)
+        ChangeMode = 0;
+      else
+        ChangeMode = 1;
+    }
+  }else{
+    Old8 = 0;
+  }
+
   bool ret = false;
   if(digitalRead(7)){
     if(!Old7){
-      if(Mode < ModeMax)
-        Mode++;
-      else
-        Mode = 0;
       Old7 = 1;
       ret = true;
     }
   }else{
     Old7 = 0;
   }
-  if(digitalRead(8)){
-    if(!Old8){
-      if(Mode > 0)
-        Mode--;
-      else
-        Mode = ModeMax;
-      Old8 = 1;
-      ret = true;
-    }
-  }else{
-    Old8 = 0;
-  }
-  return ret;
+  return Cambio = ret;
 }
 
 void readDelay(){
@@ -75,7 +72,6 @@ bool listen(){
   return readChange();
 }
 
-
 bool waitListen(){
   bool ret;
   for(uint16_t i=0; i <= Wait; i++) {
@@ -86,26 +82,19 @@ bool waitListen(){
   }
   return ret;
 }
+//EFECTOS
+void colorWipe() {
+  Wait = 1;
+  uint32_t c[7] = {RED, GREEN, BLUE, REDGREEN, REDBLUE, GREENBLUE, WHITE};
 
-//STRIP
-void apagar(){
-  for(uint16_t i=0; i<Strip.numPixels(); i++)
-    Strip.setPixelColor(i, Strip.Color(0,0,0));
-  Strip.show();
-}
-
-bool colorWipe(uint32_t c) {
-  Wait = 10;
-  for(uint16_t j=Strip.numPixels()-1, i=0; j>i; i++, j--) {
-    if(waitListen())
-      return true;
-
-    Strip.setPixelColor(j, c);
-    Strip.setPixelColor(i, c);
-    Strip.show();
+  for(uint8_t j = 0; j<7; j++){
+    for(uint16_t i=0; i<Strip.numPixels(); i++) {
+      Strip.setPixelColor(i, c[j]);
+      Strip.show();
+      if(waitListen())
+        return;
+    }
   }
-
-  return false;
 }
 
 uint32_t getColor(uint8_t x){
@@ -124,24 +113,60 @@ uint32_t getColor(uint8_t x){
   return WHITE;
 }
 
-bool colorWipeComb() {
+void colorWipeComb() {
   Wait = 5;
   uint32_t c1 = 0, c2 = 0;
+
   while(c1==c2) {
     c1 = getColor(random(0,6));
     c2 = getColor(random(0,6));
   }
   for(uint16_t j=Strip.numPixels()-1, i=0; i < Strip.numPixels(); i++, j--) {
-    if(waitListen())
-      return true;
-
     Strip.setPixelColor(j, c1);
     Strip.setPixelColor(i, c2);
     Strip.show();
+    if(waitListen())
+      return;
+  }
+}
+
+void colorWipeComb4() {
+  Wait = 5;
+  uint32_t c1 = 0, c2 = 0, c3, c4;
+  while(c1==c2) {
+    c1 = REDGREEN;
+    c2 = REDBLUE;
+    c3 = GREENBLUE;
+    c4 = GREEN;
+  }
+  uint16_t i = 0;
+  uint16_t j = Strip.numPixels()/4;
+  uint16_t k = Strip.numPixels()/2;
+  uint16_t l = Strip.numPixels()*3/4;
+
+  for(; i < Strip.numPixels(); i++, j++, k++, l++) {
+    if(j >= Strip.numPixels()-1){
+      j = 0;
+    }
+    if(k >= Strip.numPixels()-1){
+      k = 0;
+    }
+    if(l >= Strip.numPixels()-1){
+      l = 0;
+    }
+
+    Strip.setPixelColor(i, c1);
+    Strip.setPixelColor(j, c2);
+    Strip.setPixelColor(k, c3);
+    Strip.setPixelColor(l, c4);
+
+    Strip.show();
+    if(waitListen())
+      return;
   }
 
-  return false;
 }
+
 /*
 void allChange(){
   uint32_t auxC, c1 = 0, c2 = 0;
@@ -173,33 +198,38 @@ void allChange(){
 }*/
 
 //Theatre-style crawling lights.
-void theaterChase(uint32_t c) {
-  Wait = 100;
-  while(!listen()){
-    for (int8_t q=0; q < 3; q++) {
-      for (uint16_t i=0; i < Strip.numPixels(); i=i+3) {
-        Strip.setPixelColor(i+q, c);    //turn every third pixel on
-      }
-      Strip.show();
-      if(waitListen())
-        return;
+void theaterChase() {
+  Wait = 300;
+  uint32_t c[7] = {RED, GREEN, BLUE, REDGREEN, REDBLUE, GREENBLUE, WHITE};
 
-      for (uint16_t i=0; i < Strip.numPixels(); i=i+3) {
-        Strip.setPixelColor(i+q, 0);        //turn every third pixel off
+  while(1){
+    for(uint8_t j = 0; j<7; j++){
+      for(uint8_t e = 0; e<10; e++){
+        for (int8_t q=0; q < 3; q++) {
+          for (uint16_t i=0; i < Strip.numPixels(); i=i+3) {
+            Strip.setPixelColor(i+q, c[j]);    //turn every third pixel on
+          }
+          Strip.show();
+          if(waitListen())
+            return;
+
+          for (uint16_t i=0; i < Strip.numPixels(); i=i+3) {
+            Strip.setPixelColor(i+q, 0);        //turn every third pixel off
+          }
+        }
       }
     }
   }
 }
 
-
 void randomLeds() {
   Wait = 100;
-  while(!listen()){
-    if(waitListen())
-      return;
+  for(uint16_t i=0; i<Strip.numPixels(); i++){
     Strip.setPixelColor(random(0, Strip.numPixels()), 0);
     Strip.setPixelColor(random(0, Strip.numPixels()), random(0, 16777215));
     Strip.show();
+    if(waitListen())
+      return;
   }
 }
 
@@ -226,9 +256,9 @@ void rainbow() {
       for(i=0; i<Strip.numPixels(); i++) {
         Strip.setPixelColor(i, Wheel((i+j) & 255));
       }
+      Strip.show();
       if(waitListen())
         return;
-      Strip.show();
     }
   }
 }
@@ -242,9 +272,9 @@ void rainbowCycle() {
       for(i=0; i< Strip.numPixels(); i++) {
         Strip.setPixelColor(i, Wheel(((i * 256 / Strip.numPixels()) + j) & 255));
       }
+      Strip.show();
       if(waitListen())
         return;
-      Strip.show();
     }
   }
 }
@@ -258,9 +288,9 @@ void theaterChaseRainbow() {
         for (uint16_t i=0; i < Strip.numPixels(); i=i+2) {
           Strip.setPixelColor(i+q, Wheel( (i+j) % 255));    //turn every third pixel on
         }
+        Strip.show();
         if(waitListen())
           return;
-        Strip.show();
         for (uint16_t i=0; i < Strip.numPixels(); i=i+2) {
           Strip.setPixelColor(i+q, 0);        //turn every third pixel off
         }
@@ -269,8 +299,29 @@ void theaterChaseRainbow() {
   }
 }
 
+void apagar(){
+  for(uint16_t i=0; i<Strip.numPixels(); i++)
+    Strip.setPixelColor(i, Strip.Color(0,0,0));
+  Strip.show();
+  waitListen();
+}
 
 //MAIN
+//EFECTOS
+void (*efectos[])() = {
+  apagar,
+  colorWipe,
+  randomLeds,
+  colorWipeComb,
+  colorWipeComb4,
+  theaterChase,
+  rainbow,
+  rainbowCycle,
+  theaterChaseRainbow
+};
+const uint8_t lengthEfectos = 9;
+uint8_t numEfecto = 0;
+
 void setup() {
   //Serial.begin(9600);
   assignPin();
@@ -279,49 +330,15 @@ void setup() {
 }
 
 void loop() {
-  listen();
-  switch (Mode) {
-    case 0:
-      break;
-    case 1:
-      randomLeds();
-      break;
-    case 2:
-      while(1){
-        if(colorWipe(RED) || colorWipe(GREEN) || colorWipe(BLUE) || colorWipe(WHITE))
-          break;
-      }
-      break;
-    case 3:
-      while(1){
-        if(colorWipeComb())
-          break;
-      }
-      break;
-    case 4:
-      theaterChase(WHITE);
-      break;
-    case 5:
-      theaterChase(RED);
-      break;
-    case 6:
-      theaterChase(BLUE);
-      break;
-    case 7:
-      theaterChase(GREEN);
-      break;
-    case 8:
-      rainbow();
-      break;
-    case 9:
-      rainbowCycle();
-      break;
-    case 10:
-      theaterChaseRainbow();
-      break;
-  /*  case 11:
-      allChange();
-      break;*/
+  for(Tiempo = 0; !Cambio && Tiempo < 1;){
+    (*efectos[numEfecto])();
+    if(ChangeMode)
+      Tiempo++;
   }
+  Cambio = 0;
   apagar();
+  if(numEfecto < lengthEfectos-1)
+    numEfecto++;
+  else
+    numEfecto = 0;
 }
