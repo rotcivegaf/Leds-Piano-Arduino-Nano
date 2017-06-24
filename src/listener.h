@@ -5,33 +5,16 @@
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
 
-using namespace std;
-
 enum botones {NOINPUT=0, POWERSTRIP=1, CHANGESTRIP=2, SVCHANGEMODE=3, SVCHANGEDELAY=4, SVNOSE=5};
 
-class Listener {
-  private:
-    bool activado = false;
+bool activado = false;
 
-    uint8_t read();
-
-  public:
-    bool listen();
-};
-
-bool Listener::listen(){
-
-  return false;
-}
-
-uint8_t Listener::read() {
+bool read(uint16_t wait) {
   uint16_t analogValue = analogRead(0);
   uint8_t ret = NOINPUT;
 
-  if(analogValue < 150){
-    activado = false;
-    return ret;
-  }
+  if(analogValue < 150)
+    return false;
 
   if (!activado){
     activado = true;
@@ -48,7 +31,7 @@ uint8_t Listener::read() {
       ret = SVNOSE;
   }
 
-  return ret;
+  return activado;
 }
 
 /*
