@@ -42,21 +42,21 @@ uint32_t Wheel(byte WheelPos) {
 }
 
 //Efectos
-void colorWipe(Adafruit_NeoPixel strip) {
-  uint16_t wait = 1;
+void colorWipe(Adafruit_NeoPixel &strip) {
+  wait = 1;
   uint32_t c[7] = {RED, GREEN, BLUE, REDGREEN, REDBLUE, GREENBLUE, WHITE};
 
   for(uint8_t j = 0; j<7; j++){
     for(uint16_t i=0; i<strip.numPixels(); i++) {
       strip.setPixelColor(i, c[j]);
       strip.show();
-      if(read(wait)) return;
+      if(readAndDelay()) return;
     }
   }
 }
 
-void colorWipeComb(Adafruit_NeoPixel strip){
-  uint16_t wait = 5;
+void colorWipeComb(Adafruit_NeoPixel &strip){
+  wait = 5;
   uint32_t c1 = 0, c2 = 0;
 
   while(c1==c2) {
@@ -67,12 +67,12 @@ void colorWipeComb(Adafruit_NeoPixel strip){
     strip.setPixelColor(j, c1);
     strip.setPixelColor(i, c2);
     strip.show();
-    if(read(wait)) return;
+    if(readAndDelay()) return;
   }
 }
 
-void colorWipeComb4(Adafruit_NeoPixel strip) {
-  uint16_t wait = 5;
+void colorWipeComb4(Adafruit_NeoPixel &strip) {
+  wait = 5;
   uint32_t c1 = 0, c2 = 0, c3, c4;
   while(c1==c2) {
     c1 = REDGREEN;
@@ -102,7 +102,7 @@ void colorWipeComb4(Adafruit_NeoPixel strip) {
     strip.setPixelColor(l, c4);
 
     strip.show();
-    if(read(wait)) return;
+    if(readAndDelay()) return;
   }
 
 }
@@ -138,11 +138,11 @@ void allChange(){
 }*/
 
 //Theatre-style crawling lights.
-void theaterChase(Adafruit_NeoPixel strip) {
-  uint16_t wait = 300;
+void theaterChase(Adafruit_NeoPixel &strip) {
+  wait = 100;
   uint32_t c[7] = {RED, GREEN, BLUE, REDGREEN, REDBLUE, GREENBLUE, WHITE};
 
-  while(1){
+  //while(1){
     for(uint8_t j = 0; j<7; j++){
       for(uint8_t e = 0; e<10; e++){
         for (int8_t q=0; q < 3; q++) {
@@ -150,7 +150,7 @@ void theaterChase(Adafruit_NeoPixel strip) {
             strip.setPixelColor(i+q, c[j]);    //turn every third pixel on
           }
           strip.show();
-          if(read(wait)) return;
+          if(readAndDelay()) return;
 
           for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
             strip.setPixelColor(i+q, 0);        //turn every third pixel off
@@ -158,88 +158,89 @@ void theaterChase(Adafruit_NeoPixel strip) {
         }
       }
     }
-  }
+  //}
 }
 
-void randomLeds(Adafruit_NeoPixel strip) {
-  uint16_t wait = 100;
+void randomLeds(Adafruit_NeoPixel &strip) {
+  wait = 100;
   for(uint16_t i=0; i<strip.numPixels(); i++){
     strip.setPixelColor(random(0, strip.numPixels()), 0);
     strip.setPixelColor(random(0, strip.numPixels()), random(0, 16777215));
     strip.show();
-    if(read(wait)) return;
+    if(readAndDelay()) return;
   }
 }
 
-void rainbow(Adafruit_NeoPixel strip) {
-  uint16_t wait = 100;
+void rainbow(Adafruit_NeoPixel &strip) {
+  wait = 100;
   uint16_t i, j;
-  while(!read(wait)){
+  //while(!readAndDelay()){
     for(j=0; j<256; j++) {
       for(i=0; i<strip.numPixels(); i++) {
         strip.setPixelColor(i, Wheel((i+j) & 255));
       }
       strip.show();
-      if(read(wait)) return;
+      if(readAndDelay()) return;
     }
-  }
+  //}
 }
 
 // Slightly different, this makes the rainbow equally distributed throughout
-void rainbowCycle(Adafruit_NeoPixel strip) {
-  uint16_t wait = 100;
+void rainbowCycle(Adafruit_NeoPixel &strip) {
+  wait = 100;
   uint16_t i, j;
-  while(!read(wait)){
+  //while(!readAndDelay()){
     for(j=0; j<256*5; j++) { // 5 cycles of all colors on wheel
       for(i=0; i< strip.numPixels(); i++) {
         strip.setPixelColor(i, Wheel(((i * 256 / strip.numPixels()) + j) & 255));
       }
       strip.show();
-      if(read(wait)) return;
+      if(readAndDelay()) return;
     }
-  }
+  //}
 }
 
 //Theatre-style crawling lights with rainbow effect
-void theaterChaseRainbow(Adafruit_NeoPixel strip) {
-  uint16_t wait = 100;
-  while(!read(wait)){
-    for (int8_t j=0; j < 256; j++) {     // cycle all 256 colors in the wheel
+void theaterChaseRainbow(Adafruit_NeoPixel &strip) {
+  wait = 100;
+  //while(!read(wait)){
+    for (int16_t j=0; j < 256; j++) {     // cycle all 256 colors in the wheel
       for (int8_t q=0; q < 2; q++) {
         for (uint16_t i=0; i < strip.numPixels(); i=i+2) {
           strip.setPixelColor(i+q, Wheel( (i+j) % 255));    //turn every third pixel on
         }
         strip.show();
-        if(read(wait)) return;
+        if(readAndDelay()) return;
         for (uint16_t i=0; i < strip.numPixels(); i=i+2) {
           strip.setPixelColor(i+q, 0);        //turn every third pixel off
         }
       }
     }
-  }
+  //}
 }
 
-void allOnWheel(Adafruit_NeoPixel strip) {
-  uint16_t wait = 200;
-  while(!read(wait)){
-    for (int8_t j=0; j < 256; j++) {     // cycle all 256 colors in the wheel
+void allOnWheel(Adafruit_NeoPixel &strip) {
+  wait = 200;
+  //while(!read(wait)){
+    for (int16_t j=0; j < 256; j++) {     // cycle all 256 colors in the wheel
       for (uint16_t i=0; i < strip.numPixels(); i++) {
         strip.setPixelColor(i, Wheel( j % 255));    //turn every third pixel on
       }
       strip.show();
-      if(read(wait)) return;
+      if(readAndDelay()) return;
     }
     for(uint16_t i=0; i<strip.numPixels(); i++)
       strip.setPixelColor(i, strip.Color(0,0,0));
     strip.show();
-  }
+  //}
 }
 
 void apagar(Adafruit_NeoPixel &strip){
+  wait = 2;
   for(uint16_t i=0; i<strip.numPixels(); i++)
     strip.setPixelColor(i, strip.Color(0,0,0));
   strip.show();
-  if(read(2)) return;
+  while(readAndDelay()){};
 }
 
 #endif
