@@ -10,6 +10,8 @@ enum botones {NOINPUT=0, POWERSTRIP=1, CHANGESTRIP=2, SVCHANGEMODE=3, SVCHANGEDE
 bool activado = false;
 uint16_t wait = 1;
 bool power = true;
+bool change = true;
+uint8_t ciclo = 1;
 
 bool read() {
   uint16_t analogValue = analogRead(0);
@@ -23,7 +25,10 @@ bool read() {
       power = !power;
       return true;
     }else{
-      return true;
+      if (analogValue >= 350 && analogValue < 500){
+        change = !change;
+        return true;
+      //todo change efectos
       //if (analogValue >= 350 && analogValue < 500){
 
       //}

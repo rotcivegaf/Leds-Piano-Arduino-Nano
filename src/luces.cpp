@@ -4,7 +4,7 @@
 
 #include "efectos.h"
 
-uint32_t Tiempo;
+uint32_t i;
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(300-105, 6, NEO_GRB + NEO_KHZ800);
 //Adafruit_NeoPixel stripFront = Adafruit_NeoPixel(20, 4, NEO_GRB + NEO_KHZ800);
@@ -34,9 +34,9 @@ void setup() {
 
 void loop() {
   if(power){
-    for(Tiempo = 0;  Tiempo < 1;){
+    for(i = 0;  i < ciclo;){
       (*efectos[numEfecto])(strip);
-        Tiempo++;
+      if(change) i++;
     }
     (numEfecto < lengthEfectos-1) ? numEfecto++ : numEfecto = 0;
   }else{
