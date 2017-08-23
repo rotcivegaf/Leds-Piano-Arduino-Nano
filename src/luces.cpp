@@ -6,11 +6,7 @@
 
 uint32_t i;
 
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(300-105, 6, NEO_GRB + NEO_KHZ800);
-//Adafruit_NeoPixel stripFront = Adafruit_NeoPixel(20, 4, NEO_GRB + NEO_KHZ800);
-
-void (*efectos[10])(Adafruit_NeoPixel&) = {
-  apagar,
+void (*efectos[9])(Adafruit_NeoPixel&) = {
   allOnWheel,
   colorWipe,
   randomLeds,
@@ -21,15 +17,12 @@ void (*efectos[10])(Adafruit_NeoPixel&) = {
   rainbowCycle,
   theaterChaseRainbow
 };
-const uint8_t lengthEfectos = 10;
-uint8_t numEfecto = 0;
 
 void setup() {
-  //Serial.begin(9600);
   strip.begin();
   strip.show();
-  //stripFront.begin();
-  //stripFront.show();
+  stripFront.begin();
+  stripFront.show();
 }
 
 void loop() {
@@ -42,5 +35,4 @@ void loop() {
   }else{
     apagar(strip);
   }
-
 }

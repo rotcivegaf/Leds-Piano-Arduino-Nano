@@ -3,11 +3,10 @@
 
 #include <stdint.h>
 #include <Arduino.h>
-#include "listener.h"
 #include <Adafruit_NeoPixel.h>
 
-enum colores {RED = 16711680, GREEN = 65280, BLUE = 255,
-  REDGREEN = 16776960, REDBLUE = 16711935, GREENBLUE = 65535, WHITE = 8355711};
+#include "globals.h"
+#include "listener.h"
 
 //auxiliar functions
 uint32_t color(uint8_t r, uint8_t g, uint8_t b) {
@@ -44,11 +43,10 @@ uint32_t Wheel(byte WheelPos) {
 //Efectos
 void colorWipe(Adafruit_NeoPixel &strip) {
   wait = 1;
-  uint32_t c[7] = {RED, GREEN, BLUE, REDGREEN, REDBLUE, GREENBLUE, WHITE};
 
   for(uint8_t j = 0; j<7; j++){
     for(uint16_t i=0; i<strip.numPixels(); i++) {
-      strip.setPixelColor(i, c[j]);
+      strip.setPixelColor(i, colorArray[j]);
       strip.show();
       if(readAndDelay()) return;
     }
