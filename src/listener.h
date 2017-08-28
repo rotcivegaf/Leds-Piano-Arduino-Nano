@@ -6,40 +6,57 @@
 #include <Adafruit_NeoPixel.h>
 #include "globals.h"
 
-bool read() {
-  uint16_t analogValue = analogRead(0);
-  activado = false;
-  if(analogValue < 150) return activado;
+uint16_t clasificarRead(uint16_t value) {
+  if(value < 150)
+    return NOINPUT;
+  else
+    if(value >= 150 && value < 350)
+      return UNO;
+    else
+      if(value >= 350 && value < 500)
+        return DOS;
+      else
+        if(value >= 500 && value < 725)
+          return TRES;
+        else
+          if(value >= 725 && value < 825)
+            return CUATRO;
+          else
+            return CINCO;
+}
 
-  if(!activado){
-    if (analogValue >= 150 && analogValue < 350){ //on off inside strip
+bool read() {
+  uint8_t boton = clasificarRead(analogRead(0));
+
+  if(boton == NOINPUT || activado) return activado = false;
+
+  activado = true;
+  switch(boton){
+    case UNO:
       power = !power;
-      activado = true;
-    }
-    if (analogValue >= 350 && analogValue < 500){ // on of front strip
+      return true;
+    case DOS:
       uint32_t color;
       (stripFront.getPixelColor(0)) ? color = colorArray[colorFront] : color = 0;
       for (uint16_t i=0; i < stripFront.numPixels(); i++) {
         stripFront.setPixelColor(i, color);
       }
       stripFront.show();
-    }
-    if (analogValue >= 500 && analogValue < 725){ // change inside effects
+      return false;
+    case TRES:
       change = !change;
-      activado = true;
-    }
-    if (analogValue >= 725 && analogValue < 825){ // change front color
+      return true;
+    case CUATRO:
       (colorFront <= 7) ? colorFront = colorFront+1 : colorFront = 0;
       for (uint16_t i=0; i < stripFront.numPixels(); i++) {
         stripFront.setPixelColor(i, colorArray[colorFront]);
       }
       stripFront.show();
-    }
-    if (analogValue >= 825){ // change efect
+      return false;
+    case CINCO:
       (numEfecto < lengthEfectos-1) ? numEfecto++ : numEfecto = 0;
-    }
+      return true;
   }
-  return activado;
 }
 
 bool readAndDelay(){

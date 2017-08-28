@@ -4,9 +4,7 @@
 
 #include "efectos.h"
 
-uint32_t i;
-
-void (*efectos[9])(Adafruit_NeoPixel&) = {
+void (*efectos[lengthEfectos])(Adafruit_NeoPixel&) = {
   allOnWheel,
   colorWipe,
   randomLeds,
@@ -27,9 +25,9 @@ void setup() {
 
 void loop() {
   if(power){
-    for(i = 0;  i < ciclo;){
+    for(numEfecto = 0;  numEfecto < ciclo;){
       (*efectos[numEfecto])(strip);
-      if(change) i++;
+      if(change) numEfecto++;
     }
     (numEfecto < lengthEfectos-1) ? numEfecto++ : numEfecto = 0;
   }else{
