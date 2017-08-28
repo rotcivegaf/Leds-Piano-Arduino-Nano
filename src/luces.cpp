@@ -4,13 +4,9 @@
 
 #include "efectos.h"
 
-uint32_t i;
+const uint8_t lengthEfectos = 9;
 
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(300-105, 6, NEO_GRB + NEO_KHZ800);
-//Adafruit_NeoPixel stripFront = Adafruit_NeoPixel(20, 4, NEO_GRB + NEO_KHZ800);
-
-void (*efectos[10])(Adafruit_NeoPixel&) = {
-  apagar,
+void (*efectos[lengthEfectos])(Adafruit_NeoPixel&) = {
   allOnWheel,
   colorWipe,
   randomLeds,
@@ -21,26 +17,24 @@ void (*efectos[10])(Adafruit_NeoPixel&) = {
   rainbowCycle,
   theaterChaseRainbow
 };
-const uint8_t lengthEfectos = 10;
-uint8_t numEfecto = 0;
+
 
 void setup() {
   //Serial.begin(9600);
   strip.begin();
   strip.show();
-  //stripFront.begin();
-  //stripFront.show();
+  stripControl.begin();
+  stripControl.show();
 }
 
 void loop() {
   if(power){
-    for(i = 0;  i < ciclo;){
+    for(numEfecto = 0;  numEfecto < ciclo;){
       (*efectos[numEfecto])(strip);
-      if(change) i++;
+      if(change) numEfecto++;
     }
     (numEfecto < lengthEfectos-1) ? numEfecto++ : numEfecto = 0;
   }else{
     apagar(strip);
   }
-
 }

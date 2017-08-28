@@ -5,50 +5,69 @@
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
 
-enum botones {NOINPUT=0, POWERSTRIP=1, CHANGESTRIP=2, SVCHANGEMODE=3, SVCHANGEDELAY=4, SVNOSE=5};
+enum clasificaciones {NOINPUT=0, UNO=1, DOS=2, TRES=3, CUATRO=4, CINCO=5};
 
 bool activado = false;
 uint16_t wait = 1;
-bool power = true;
+bool power = false;
 bool change = true;
-uint8_t ciclo = 1;
+uint8_t ciclo = 3;
+uint32_t numEfecto = 0;
+bool stripIsSelected = true;
+//Adafruit_NeoPixel stripFront = Adafruit_NeoPixel(, 5, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(300-105, 6, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel stripControl = Adafruit_NeoPixel(6, 7, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel stripSelected = strip;
+
+uint16_t clasificarRead(uint16_t value) {
+  if(value >= 150 && value < 350)
+    return UNO;
+  else
+    if(value >= 350 && value < 500)
+      return DOS;
+    else
+      if(value >= 500 && value < 725)
+        return TRES;
+      else
+        if(value >= 725 && value < 825)
+          return CUATRO;
+        else
+          if(value >= 725 && value < 825)
+            return CINCO;
+          else
+            return NOINPUT;
+}
+
+bool changeSelectStrip(){
+  stripIsSelected ?  stripSelected = stripControl : stripSelected = stripControl;
+  stripIsSelected = !stripIsSelected;
+  
+  stripControl.setPixelColor(3, strip.getPixelColor(0));
+  stripControl.setBrightness(50);
+  stripControl.show();
+  return false;
+}
 
 bool read() {
-  uint16_t analogValue = analogRead(0);
-  if(analogValue < 150){
-    activado = false;
-    return false;
-  }
-  if(!activado){
-    activado = true;
-    if (analogValue >= 150 && analogValue < 350){
+  uint8_t boton = clasificarRead(analogRead(0));
+  if(boton == NOINPUT) return activado = false;
+  activado = true;
+  switch(boton){
+    case UNO:// ON/OFF
       power = !power;
       return true;
-    }else{
-      if (analogValue >= 350 && analogValue < 500){
-        change = !change;
-        return true;
-      //todo change efectos
-      //if (analogValue >= 350 && analogValue < 500){
-
-      //}
-    }
+    case DOS:// select strip
+      return changeSelectStrip();
+    case TRES://cambio efectos
+      change = !change;
+      return true;
+    case CUATRO://cambiar un efecto
+      stripControl.setPixelColor(3, stripControl.Color(50,0,100));
+      numEfecto++;
+      return true;
+    case CINCO:
+      return true;
   }
-  return false;
-
-
-/*  if (analogValue >= 150 && analogValue < 350)
-    ret = POWERSTRIP;
-  if (analogValue >= 350 && analogValue < 500)
-    ret = CHANGESTRIP;
-  if (analogValue >= 500 && analogValue < 725)
-
-    ret = SVCHANGEMODE;
-  if (analogValue >= 725 && analogValue < 825)
-    cambiarWait(wait);
-  if (analogValue >= 825)
-    ret = SVNOSE;
-*/
 }
 
 bool readAndDelay(){
@@ -65,66 +84,4 @@ void cambiarWait(uint16_t &wait){
   }*/
 }
 
-/*
-uint16_t Wait = 1;
-uint32_t Tiempo;
-bool ChangeMode = true;
-bool Old8 = false;
-bool Old7 = false;
-bool Cambio = false;
-*/
-
-/*
-bool readChange(){
-  if(digitalRead(8)){
-    if(!Old8){
-      Old8 = true;
-      ChangeMode = !ChangeMode;
-    }
-  }else{
-    Old8 = false;
-  }
-
-  bool ret = false;
-  if(digitalRead(7)){
-    if(!Old7){
-      Old7 = true;
-      ret = true;
-    }
-  }else{
-    Old7 = false;
-  }
-  return Cambio = ret;
-}
-
-void readDelay(){
-  if(digitalRead(12) == HIGH){
-    Wait += 1;
-    return;
-  }
-  if(digitalRead(10) == HIGH){
-    if(Wait <= 0){
-      Wait = 1;
-    }else{
-      Wait -= 1;
-    }
-  }
-}
-
-bool listen(){
-  readDelay();
-  return readChange();
-}
-
-bool waitListen(){
-  bool ret;
-  for(uint16_t i=0; i <= Wait; i++) {
-    ret = readChange();
-    delay(1);
-    readDelay();
-    if(ret) return ret;
-  }
-  return ret;
-}
-*/
 #endif
